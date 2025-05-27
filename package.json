@@ -1,0 +1,22 @@
+{
+  "name": "com.frostbyte.stateforge",
+  "version": "1.0.0",
+  "displayName": "Stateforge",
+  "description": "StateForge is a hierarchical finite state machine framework for Unity that allows you to create complex state machines with ease. It provides a visual editor and runtime support for state machines, making it easy to manage game states and transitions.",
+  "unity": "6000.0",
+  "keywords": [
+    "state machine",
+    "finite state machine",
+    "hierarchical state machine",
+    "hierarchical finite state machine",
+    "fsm",
+    "hfsm",
+    "behaviour tree",
+    "behavior tree"
+  ],
+  "author": {
+    "name": "Okan Can Ozbek",
+    "email": "o.ozbek@pixelware.nl"
+  },
+  "type": "library"
+}
