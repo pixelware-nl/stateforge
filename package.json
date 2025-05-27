@@ -1,5 +1,5 @@
 {
-  "name": "com.frostbyte.stateforge",
+  "name": "com.pixelware.stateforge",
   "version": "1.0.0",
   "displayName": "Stateforge",
   "description": "StateForge is a hierarchical finite state machine framework for Unity that allows you to create complex state machines with ease. It provides a visual editor and runtime support for state machines, making it easy to manage game states and transitions.",
