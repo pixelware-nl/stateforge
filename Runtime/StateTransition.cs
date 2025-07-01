@@ -1,6 +1,5 @@
 ﻿#nullable enable
 
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,34 +7,34 @@ namespace Stateforge
 {
     public interface IStateTransition
     {
-        public IStateFactory stateFactory { get; }
-        public IStateMachine stateMachine { get; }
+        public IStateFactory StateFactory { get; }
+        public IStateMachine StateMachine { get; }
         
         public void Handle(IState state);
     }
     
     public class StateTransition : IStateTransition
     {
-        public IStateFactory stateFactory { get; }
-        public IStateMachine stateMachine { get; }
+        public IStateFactory StateFactory { get; }
+        public IStateMachine StateMachine { get; }
 
         public StateTransition(IStateFactory stateFactory, IStateMachine stateMachine)
         {
-            this.stateFactory = stateFactory;
-            this.stateMachine = stateMachine;
+            StateFactory = stateFactory;
+            StateMachine = stateMachine;
         }
         
         public void Handle(IState state)
         {
-            Transition(state.transitions, state, state.isRootState);
+            Transition(state.Transitions, state);
 
-            if (state?.childState != null)
+            if (state.ChildState != null)
             {
-                Handle(state.childState);
+                Handle(state.ChildState);
             }
         }
 
-        private void Transition(HashSet<ITransition> transitions, IState? state, bool isRootState = false)
+        private void Transition(HashSet<ITransition> transitions, IState? state)
         {
             ITransition? transition = GetTransition(transitions);
 
@@ -44,37 +43,61 @@ namespace Stateforge
                 return;
             }
             
-            SetState(transition.toStateType, state, isRootState);
+            SetState(transition.State, state);
         }
 
-        private void SetState(Type toStateType, IState? state, bool isRootState = false)
+        private void SetState(IState to, IState? current)
         {
-            if (isRootState)
+            if (TrySetRootState(to, current))
             {
-                if (stateMachine.currentState.GetType() == toStateType)
-                {
-                    return;
-                }
-                
-                stateMachine.currentState.Exit();
-                stateMachine.currentState = stateFactory.GetState(toStateType);
-                stateMachine.currentState.Enter();
-                
+                // Exit early if the root state was set
                 return;
             }
             
-            if (state?.parentState != null)
+            if (TrySetChildState(to, current))
             {
-                if (state.parentState.childState != null && state.parentState.childState.GetType() == toStateType)
+                // Exit early if the child state was set
+                return;
+            }
+        }
+
+        private bool TrySetRootState(IState to, IState? current)
+        {
+            if (current is { IsRootState: true })
+            {
+                if (StateMachine.CurrentState == to)
                 {
-                    return;
+                    return true;
+                }
+                
+                StateMachine.CurrentState.Exit();
+                StateMachine.CurrentState = StateFactory.GetState(to.GetType());
+                StateMachine.CurrentState.Enter();
+                
+                return true;
+            }
+
+            return false;
+        }
+
+        private bool TrySetChildState(IState to, IState? current)
+        {
+            if (current?.ParentState != null)
+            {
+                if (current.ParentState.ChildState != null && current.ParentState.ChildState == to)
+                {
+                    return true;
                 }
             
-                state.parentState.childState?.Exit();
-                state.parentState.childState = stateFactory.GetState(toStateType);
-                state.parentState.childState.parentState = state.parentState;
-                state.parentState.childState.Enter();
+                current.ParentState.ChildState?.Exit();
+                current.ParentState.ChildState = StateFactory.GetState(to.GetType());
+                current.ParentState.ChildState.ParentState = current.ParentState;
+                current.ParentState.ChildState.Enter();
+
+                return true;
             }
+            
+            return false;
         }
         
         private ITransition? GetTransition(HashSet<ITransition> transitions)
@@ -86,7 +109,7 @@ namespace Stateforge
 
             foreach (ITransition transition in transitions.Where(transition => transition != null))
             {
-                if (transition.condition() && transition.toStateType != typeof(State))
+                if (transition.Condition())
                 {
                     return transition;
                 }

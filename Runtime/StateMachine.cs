@@ -1,45 +1,45 @@
 ﻿#nullable enable
-using System;
 
 namespace Stateforge
 {
     public interface IStateMachine
     {
-        public IStateFactory stateFactory { get; }
-        public IState currentState { get; set; }
-        public IStateTransition stateTransition { get; }
-
-        public string GetTree(IState state);
+        public IState CurrentState { get; set; }
+        public IStateTransition StateTransition { get; }
+        
+        public void Handle();
+        public string DrawGizmos(IState state);
     }
 
-    public class StateMachine : IStateMachine
+    public class StateMachine<TState> : IStateMachine where TState : IState
     {
-        public IStateFactory stateFactory { get; }
-        public IState currentState { get; set; }
-        public IStateTransition stateTransition { get; }
+        public IState CurrentState { get; set; }
+        public IStateTransition StateTransition { get; }
 
-        public StateMachine(IStateFactory stateFactory, Type initialState)
+        public StateMachine(IStateFactory stateFactory)
         {
-            this.stateFactory = stateFactory;
-            this.stateFactory.GetFactory();
+            CurrentState = stateFactory.GetState(typeof(TState));
+            CurrentState.Enter();
             
-            currentState = this.stateFactory.GetState(initialState);
-            currentState.Enter();
-            
-            stateTransition = new StateTransition(this.stateFactory, this);
+            StateTransition = new StateTransition(stateFactory, this);
+        }
+
+        public void Handle()
+        {
+            StateTransition.Handle(CurrentState);
+            CurrentState.Update();
         }
         
-        public string GetTree(IState state)
+        public string DrawGizmos(IState state)
         {
             string tree = state.GetType().Name;
 
-            if (state.childState != null)
+            if (state.ChildState != null)
             {
-                tree += " > " + GetTree(state.childState);
+                tree += " > " + DrawGizmos(state.ChildState);
             }
 
             return tree;
         }
-        
     }
 }
