@@ -4,19 +4,19 @@ namespace Stateforge
 {
     public interface ITransition
     {
-        Type toStateType { get; }
-        Func<bool> condition { get; }
+        IState State { get; }
+        Func<bool> Condition { get; }
     }
     
     public class Transition : ITransition
     {
-        public Type toStateType { get; private set; }
-        public Func<bool> condition { get; private set; }
+        public IState State { get; }
+        public Func<bool> Condition { get; }
         
-        public Transition(Type toStateType, Func<bool> condition)
+        public Transition(IState state, Func<bool> condition)
         {
-            this.toStateType = toStateType;
-            this.condition = condition;
+            State = state;
+            Condition = condition;
         }
     }
 }

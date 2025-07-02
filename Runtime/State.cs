@@ -1,39 +1,45 @@
 ﻿using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
+using UnityEngine;
 
 namespace Stateforge
 {
     public interface IState
     {
-        public bool isRootState { get; }
+        public bool IsRootState { get; }
         
-        public IState parentState { get; set; }
-        public IState childState { get; set; }
+        public IState ParentState { get; set; }
+        public IState ChildState { get; set; }
         
-        public HashSet<ITransition> transitions { get; }
-        
-        public IController controller { get; }
+        public HashSet<ITransition> Transitions { get; }
         
         void Enter();
         void Exit();
         void Update();
     }
     
-    public abstract class State : IState
+    public abstract class State<TController> : IState where TController : IController
     {
-        public bool isRootState { get; private set; }
+        public bool IsRootState { get; private set; }
         
-        public IState parentState { get; set; }
-        public IState childState { get; set; }
+        public IState ParentState { get; set; }
+        public IState ChildState { get; set; }
         
-        public HashSet<ITransition> transitions { get; private set; }
+        public HashSet<ITransition> Transitions { get; private set; }
 
-        public IController controller { get; }
+        public TController Controller { get; set; }
 
-        protected State(IController controller)
+        public void Create(TController controller, bool isRoot = true)
         {
-            this.controller = controller;
-            SetupState();
+            Controller = controller;
+            IsRootState = isRoot;
+        }
+
+        public void Setup()
+        {
+            Transitions = new HashSet<ITransition>();
+            SetTransitions();
         }
         
         public void Enter()
@@ -43,14 +49,14 @@ namespace Stateforge
 
         public void Exit()
         {
-            childState?.Exit();
+            ChildState?.Exit();
             OnExit();
         }
 
         public void Update()
         {
             OnUpdate();
-            childState?.Update();
+            ChildState?.Update();
         }
 
         protected virtual void OnEnter() { }
@@ -59,27 +65,16 @@ namespace Stateforge
         
         protected abstract void SetTransitions();
         
-        protected void AddTransition(Type toStateType, Func<bool> condition)
+        protected void AddTransition<TState>(Func<bool> condition) where TState : IState
         {
-            transitions.Add(new Transition(toStateType, condition));
+            Transitions.Add(new Transition(Controller.StateFactory.GetState(typeof(TState)), condition));
         }
 
-        protected void EnableRootState()
+        protected void SetChild<TState>() where TState : IState
         {
-            isRootState = true;
-        }
-
-        protected void SetChild(Type childStateType)
-        {
-            childState = controller.stateFactory.GetState(childStateType);
-            childState.parentState = this;
-            childState.Enter();
-        }
-        
-        private void SetupState()
-        {
-            transitions = new HashSet<ITransition>();
-            SetTransitions();
+            ChildState = Controller.StateFactory.GetState(typeof(TState));
+            ChildState.ParentState = this;
+            ChildState.Enter();
         }
     }
 }

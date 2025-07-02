@@ -1,28 +1,24 @@
-﻿using System;
-using UnityEngine;
+﻿using UnityEngine;
 
 namespace Stateforge
 {
     public interface IController
     {
-        public IStateFactory stateFactory { get; set;  }
-        public IStateMachine stateMachine { get; set; }
+        public IStateFactory StateFactory { get; set; }
+        public IStateMachine StateMachine { get; set; }
     }
     
     public abstract class Controller: MonoBehaviour, IController
     {
-        public IStateFactory stateFactory { get; set; }
-        public IStateMachine stateMachine { get; set; }
-
-        protected void GetFactory(IStateFactory factory)
+        public IStateFactory StateFactory { get; set; }
+        public IStateMachine StateMachine { get; set; }
+        
+        protected void SetupStateMachine<TState>(IStateFactory stateFactory) where TState : IState
         {
-            stateFactory = factory;
-            stateFactory.GetFactory();
-        }
-
-        protected void GetStateMachine(Type initialStateType)
-        {
-            stateMachine = new StateMachine(stateFactory, initialStateType);
+            StateFactory = stateFactory;
+            StateFactory.Initialize();
+            
+            StateMachine = new StateMachine<TState>(StateFactory);
         }
     }
 }
