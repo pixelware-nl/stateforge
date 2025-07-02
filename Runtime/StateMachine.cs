@@ -1,45 +1,52 @@
-﻿#nullable enable
-
-namespace Stateforge
+﻿namespace Stateforge
 {
-    public interface IStateMachine
+    public interface IStateMachine<TContext> where TContext : IContext
     {
-        public IState CurrentState { get; set; }
-        public IStateTransition StateTransition { get; }
-        
+        public IState<TContext> CurrentState { get; set; }
+        public IStateTransition<TContext> StateTransition { get; }
+        public IStateFactory<TContext> StateFactory { get; }
+
         public void Handle();
-        public string DrawGizmos(IState state);
     }
 
-    public class StateMachine<TState> : IStateMachine where TState : IState
+    public class StateMachine<TContext> : IStateMachine<TContext> where TContext : IContext
     {
-        public IState CurrentState { get; set; }
-        public IStateTransition StateTransition { get; }
-
-        public StateMachine(IStateFactory stateFactory)
-        {
-            CurrentState = stateFactory.GetState(typeof(TState));
-            CurrentState.Enter();
-            
-            StateTransition = new StateTransition(stateFactory, this);
-        }
+        public IState<TContext> CurrentState { get; set; }
+        public IStateTransition<TContext> StateTransition { get; private set; }
+        public IStateFactory<TContext> StateFactory { get; private set; }
 
         public void Handle()
         {
-            StateTransition.Handle(CurrentState);
+            StateTransition.Handle((IState<TContext>)CurrentState);
             CurrentState.Update();
         }
-        
-        public string DrawGizmos(IState state)
+
+        protected void Setup<TState, TStateFactory>(TContext context, TStateFactory stateFactory)
+            where TState : State<TContext>
+            where TStateFactory : IStateFactory<TContext>
         {
-            string tree = state.GetType().Name;
+            StateFactory = stateFactory;
+            StateFactory.Create(this, context);
+            Console.WriteLine("Created factory");
 
-            if (state.ChildState != null)
+            SetGlobalTransitions();
+
+            CurrentState = StateFactory.GetState(typeof(TState));
+            CurrentState.Enter();
+
+            StateTransition = new StateTransition<TContext>(this);
+        }
+
+        protected virtual void SetGlobalTransitions() { }
+
+        protected void AddGlobalTransition<TState>(Func<bool> condition) where TState : IState<TContext>
+        {
+            var applicableStates = StateFactory.GetStates().Where(state => state.Key != typeof(TState));
+
+            foreach (IState<TContext> state in applicableStates.ToDictionary().Values)
             {
-                tree += " > " + DrawGizmos(state.ChildState);
+                state.Transitions.Add(new Transition<TContext>(StateFactory.GetState(typeof(TState)), condition, global: true));
             }
-
-            return tree;
         }
     }
 }

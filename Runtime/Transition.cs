@@ -1,22 +1,23 @@
-﻿using System;
-
-namespace Stateforge
+﻿namespace Stateforge
 {
-    public interface ITransition
+    public interface ITransition<TContext> where TContext : IContext
     {
-        IState State { get; }
+        IState<TContext> State { get; }
         Func<bool> Condition { get; }
+        bool Global { get; }
     }
     
-    public class Transition : ITransition
+    public class Transition<TContext> : ITransition<TContext> where TContext : IContext
     {
-        public IState State { get; }
+        public IState<TContext> State { get; }
         public Func<bool> Condition { get; }
+        public bool Global { get; }
         
-        public Transition(IState state, Func<bool> condition)
+        public Transition(IState<TContext> state, Func<bool> condition, bool global = false) 
         {
             State = state;
             Condition = condition;
+            Global = global;
         }
     }
 }

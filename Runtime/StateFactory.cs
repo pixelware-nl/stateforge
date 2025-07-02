@@ -1,53 +1,72 @@
-﻿using System;
-using System.Collections.Generic;
-
-namespace Stateforge
+﻿namespace Stateforge
 {
-    public interface IStateFactory
+    public interface IStateFactory<TContext> where TContext : IContext
     {
-        public void Initialize();
-        public IState GetState(Type state);
+        public IState<TContext> GetState(Type state);
+        public IReadOnlyDictionary<Type, IState<TContext>> GetStates();
+        public void Create(IStateMachine<TContext> stateMachine, TContext context);
     }
     
-    public abstract class StateFactory<TController> : IStateFactory where TController : IController
+    public abstract class StateFactory<TContext> : IStateFactory<TContext> where TContext : IContext
     {
-        private readonly TController _controller;
-        private readonly Dictionary<Type, State<TController>> _states = new();
+        private IStateMachine<TContext> _stateMachine;
+        private TContext _context;
+        
+        private readonly Dictionary<Type, IState<TContext>> _states = new();
 
-        protected StateFactory(TController controller)
+        public void Create(IStateMachine<TContext> stateMachine, TContext context)
         {
-            _controller = controller;
-        }
+            _stateMachine = stateMachine;
+            _context = context;
 
-        public void Initialize()
-        {
+            Console.WriteLine("Entered, statemachine name: " + _stateMachine.GetType().Name);
+            
             SetStates();
+            
+            Console.WriteLine("List of states:");
+            foreach (var state in _states)
+            {
+                Console.WriteLine($"- {state.Key.Name}");
+            }
 
-            foreach (State<TController> state in _states.Values)
+            foreach (IState<TContext> state in _states.Values)
             {
                 state.Setup();
             }
+
+            Console.WriteLine($"Set states, current states: ");
+            foreach (var state in _states)
+            {
+                Console.WriteLine($"- {state.Key.Name}");
+            }
         }
         
-        public IState GetState(Type state)
+        public IState<TContext> GetState(Type state)
         {
+            Console.WriteLine($"Getting state: {state.Name}");
+            
             return _states[state];
         }
 
-        protected void AddRootState<TState>() where TState : State<TController>, new()
+        public IReadOnlyDictionary<Type, IState<TContext>> GetStates()
+        {
+            return _states.ToDictionary(kvp => kvp.Key, (kvp) => kvp.Value);
+        }
+
+        protected void AddRootState<TState>() where TState : IState<TContext>, new()
         {
             AddState<TState>(true);
         }
 
-        protected void AddChildState<TState>() where TState : State<TController>, new()
+        protected void AddChildState<TState>() where TState : IState<TContext>, new()
         {
             AddState<TState>(false);
         }
 
-        private void AddState<TState>(bool isRoot) where TState : State<TController>, new()
+        private void AddState<TState>(bool isRoot) where TState : IState<TContext>, new()
         {
             var instance = Activator.CreateInstance<TState>();
-            instance.Create(_controller, isRoot);
+            instance.Create(_stateMachine, _context, isRoot);
             
             _states.TryAdd(typeof(TState), instance);
         }
