@@ -7,6 +7,8 @@ public class UserFirstState : State<UserContext>
 {
     protected override void OnEnter()
     {   
+        SetChild<UserFirstChildState>();
+        
         Console.WriteLine("UserFirstState: Entered");
     }
     

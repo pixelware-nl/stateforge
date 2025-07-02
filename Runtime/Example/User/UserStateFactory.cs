@@ -10,5 +10,7 @@ public class UserStateFactory : StateFactory<UserContext>
         AddRootState<UserFirstState>();
         AddRootState<UserSecondState>();
         AddRootState<UserAnyState>();
+        
+        AddChildState<UserFirstChildState>();
     }
 }
