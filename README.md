@@ -90,7 +90,7 @@ public class PlayerIdleState : State<PlayerController>
 {
     protected override void OnEnter()
     {
-        SetChild<PlayerIdleNoAnimationState>();
+        SetChild<PlayerDefaultIdleState>();
     }
 
     protected override void SetTransitions()
