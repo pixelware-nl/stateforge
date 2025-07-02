@@ -1,4 +1,6 @@
-﻿namespace Stateforge
+﻿using Stateforge.Interfaces;
+
+namespace Stateforge
 {
     public interface IStateTransition<TContext> where TContext : IContext
     {

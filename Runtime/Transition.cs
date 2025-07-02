@@ -1,12 +1,7 @@
-﻿namespace Stateforge
+﻿using Stateforge.Interfaces;
+
+namespace Stateforge
 {
-    public interface ITransition<TContext> where TContext : IContext
-    {
-        IState<TContext> State { get; }
-        Func<bool> Condition { get; }
-        bool Global { get; }
-    }
-    
     public class Transition<TContext> : ITransition<TContext> where TContext : IContext
     {
         public IState<TContext> State { get; }

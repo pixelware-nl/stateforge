@@ -1,33 +1,27 @@
-﻿namespace Stateforge
+﻿using Stateforge.Interfaces;
+
+namespace Stateforge
 {
-    public interface IStateMachine<TContext> where TContext : IContext
-    {
-        public IState<TContext> CurrentState { get; set; }
-        public IStateTransition<TContext> StateTransition { get; }
-        public IStateFactory<TContext> StateFactory { get; }
-
-        public void Handle();
-    }
-
     public class StateMachine<TContext> : IStateMachine<TContext> where TContext : IContext
     {
         public IState<TContext> CurrentState { get; set; }
-        public IStateTransition<TContext> StateTransition { get; private set; }
+        public IState<TContext> PreviousState { get; set; }
         public IStateFactory<TContext> StateFactory { get; private set; }
+        
+        private IStateTransition<TContext> StateTransition;
 
         public void Handle()
         {
-            StateTransition.Handle((IState<TContext>)CurrentState);
+            StateTransition.Handle(CurrentState);
             CurrentState.Update();
         }
 
-        protected void Setup<TState, TStateFactory>(TContext context, TStateFactory stateFactory)
+        protected void Setup<TState, TStateFactory>(TContext context)
             where TState : State<TContext>
-            where TStateFactory : IStateFactory<TContext>
+            where TStateFactory : IStateFactory<TContext>, new()
         {
-            StateFactory = stateFactory;
+            StateFactory = new TStateFactory();
             StateFactory.Create(this, context);
-            Console.WriteLine("Created factory");
 
             SetGlobalTransitions();
 
