@@ -1,13 +1,19 @@
-﻿using Stateforge.Interfaces;
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using Stateforge.Runtime.Interfaces;
+using UnityEngine;
 
-namespace Stateforge
+namespace Stateforge.Runtime
 {
-    public abstract class StateFactory<TContext> : IStateFactory<TContext> where TContext : IContext
+    public abstract class StateFactory<TContext> : MonoBehaviour, IStateFactory<TContext> where TContext : IContext
     {
         private IStateMachine<TContext> _stateMachine;
         private TContext _context;
         
         private readonly Dictionary<Type, IState<TContext>> _states = new();
+        public List<Type> RootStates { get; private set; } = new();
+        public Dictionary<Type, List<Type>> Map { get; private set; } = new();
 
         public void Create(IStateMachine<TContext> stateMachine, TContext context)
         {
@@ -31,17 +37,34 @@ namespace Stateforge
         {
             return _states.ToDictionary(kvp => kvp.Key, (kvp) => kvp.Value);
         }
+        
+        public IState<TContext> GetFirstRootState()
+        {
+            return _states.Values.FirstOrDefault(state => state.IsRootState);
+        }
 
         protected void AddRootState<TState>() where TState : IState<TContext>, new()
         {
+            if (!RootStates.Contains(typeof(TState)))
+            {
+                RootStates.Add(typeof(TState));
+            }
+            
             AddState<TState>(true);
         }
 
-        protected void AddChildState<TState>() where TState : IState<TContext>, new()
+        protected void AddChildState<TParent, TChild>() where TParent : IState<TContext> where TChild : IState<TContext>, new()
         {
-            AddState<TState>(false);
+            if (!Map.ContainsKey(typeof(TParent)))
+            {
+                Map[typeof(TParent)] = new List<Type>();
+            }
+            
+            Map[typeof(TParent)].Add(typeof(TChild));
+            
+            AddState<TChild>(false);
         }
-
+        
         private void AddState<TState>(bool isRoot) where TState : IState<TContext>, new()
         {
             var instance = Activator.CreateInstance<TState>();

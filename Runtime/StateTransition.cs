@@ -1,6 +1,10 @@
-﻿using Stateforge.Interfaces;
+﻿#nullable enable
 
-namespace Stateforge
+using System.Collections.Generic;
+using System.Linq;
+using Stateforge.Runtime.Interfaces;
+
+namespace Stateforge.Runtime
 {
     public interface IStateTransition<TContext> where TContext : IContext
     {

@@ -1,6 +1,8 @@
-﻿using Stateforge.Interfaces;
+﻿using System;
+using System.Collections.Generic;
+using Stateforge.Runtime.Interfaces;
 
-namespace Stateforge
+namespace Stateforge.Runtime
 {
     public abstract class State<TContext> : IState<TContext> where TContext : IContext
     {
@@ -52,7 +54,6 @@ namespace Stateforge
         
         protected void AddTransition<TState>(Func<bool> condition) where TState : IState<TContext>
         {
-            Console.WriteLine(StateMachine.StateFactory.GetType().Name);
             Transitions.Add(new Transition<TContext>(StateMachine.StateFactory.GetState(typeof(TState)), condition));
         }
         

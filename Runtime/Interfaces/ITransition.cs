@@ -1,8 +1,12 @@
-namespace Stateforge.Interfaces;
+using System;
 
-public interface ITransition<TContext> where TContext : IContext
+namespace Stateforge.Runtime.Interfaces
 {
-    IState<TContext> State { get; }
-    Func<bool> Condition { get; }
-    bool Global { get; }
+    public interface ITransition<TContext> where TContext : IContext
+    {
+        IState<TContext> State { get; }
+        Func<bool> Condition { get; }
+        bool Global { get; }
+    }    
 }
+

@@ -1,5 +1,7 @@
-namespace Stateforge.Interfaces;
-
-public interface IContext
+namespace Stateforge.Runtime.Interfaces
 {
+    public interface IContext
+    {
+    }    
 }
+

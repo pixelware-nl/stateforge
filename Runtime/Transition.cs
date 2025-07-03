@@ -1,6 +1,7 @@
-﻿using Stateforge.Interfaces;
+﻿using System;
+using Stateforge.Runtime.Interfaces;
 
-namespace Stateforge
+namespace Stateforge.Runtime
 {
     public class Transition<TContext> : ITransition<TContext> where TContext : IContext
     {

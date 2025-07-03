@@ -1,8 +1,10 @@
-namespace Stateforge.Interfaces;
-
-public interface IStateTransition<TContext> where TContext : IContext
+namespace Stateforge.Runtime.Interfaces
 {
-    public IStateMachine<TContext> StateMachine { get; }
+    public interface IStateTransition<TContext> where TContext : IContext
+    {
+        public IStateMachine<TContext> StateMachine { get; }
         
-    public void Handle(IState<TContext> state);
+        public void Handle(IState<TContext> state);
+    }    
 }
+
