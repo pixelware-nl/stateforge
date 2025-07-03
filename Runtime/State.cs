@@ -1,44 +1,31 @@
 ﻿using System;
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEngine;
+using Stateforge.Runtime.Interfaces;
 
-namespace Stateforge
+namespace Stateforge.Runtime
 {
-    public interface IState
-    {
-        public bool IsRootState { get; }
-        
-        public IState ParentState { get; set; }
-        public IState ChildState { get; set; }
-        
-        public HashSet<ITransition> Transitions { get; }
-        
-        void Enter();
-        void Exit();
-        void Update();
-    }
-    
-    public abstract class State<TController> : IState where TController : IController
+    public abstract class State<TContext> : IState<TContext> where TContext : IContext
     {
         public bool IsRootState { get; private set; }
         
-        public IState ParentState { get; set; }
-        public IState ChildState { get; set; }
+        public IState<TContext> ParentState { get; set; }
+        public IState<TContext> ChildState { get; set; }
         
-        public HashSet<ITransition> Transitions { get; private set; }
+        public HashSet<ITransition<TContext>> Transitions { get; private set; }
 
-        public TController Controller { get; set; }
+        private IStateMachine<TContext> StateMachine { get; set; }
+        public TContext Context { get; private set; }
 
-        public void Create(TController controller, bool isRoot = true)
+        public void Create(IStateMachine<TContext> stateMachine, TContext context, bool isRoot = true)
         {
-            Controller = controller;
+            StateMachine = stateMachine;
+            Context = context;
             IsRootState = isRoot;
         }
 
         public void Setup()
         {
-            Transitions = new HashSet<ITransition>();
+            Transitions = new HashSet<ITransition<TContext>>();
             SetTransitions();
         }
         
@@ -65,14 +52,14 @@ namespace Stateforge
         
         protected abstract void SetTransitions();
         
-        protected void AddTransition<TState>(Func<bool> condition) where TState : IState
+        protected void AddTransition<TState>(Func<bool> condition) where TState : IState<TContext>
         {
-            Transitions.Add(new Transition(Controller.StateFactory.GetState(typeof(TState)), condition));
+            Transitions.Add(new Transition<TContext>(StateMachine.StateFactory.GetState(typeof(TState)), condition));
         }
-
-        protected void SetChild<TState>() where TState : IState
+        
+        protected void SetChild<TState>() where TState : IState<TContext>
         {
-            ChildState = Controller.StateFactory.GetState(typeof(TState));
+            ChildState = StateMachine.StateFactory.GetState(typeof(TState));
             ChildState.ParentState = this;
             ChildState.Enter();
         }

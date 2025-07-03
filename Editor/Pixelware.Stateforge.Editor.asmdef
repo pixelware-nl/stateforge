@@ -1,0 +1,16 @@
+{
+    "name": "pixelware.stateforge.Editor",
+    "rootNamespace": "",
+    "references": [
+        "GUID:a4cbf0f23c00fff409b47796df88d54d"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

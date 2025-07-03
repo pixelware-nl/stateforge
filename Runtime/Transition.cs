@@ -1,22 +1,19 @@
 ﻿using System;
+using Stateforge.Runtime.Interfaces;
 
-namespace Stateforge
+namespace Stateforge.Runtime
 {
-    public interface ITransition
+    public class Transition<TContext> : ITransition<TContext> where TContext : IContext
     {
-        IState State { get; }
-        Func<bool> Condition { get; }
-    }
-    
-    public class Transition : ITransition
-    {
-        public IState State { get; }
+        public IState<TContext> State { get; }
         public Func<bool> Condition { get; }
+        public bool Global { get; }
         
-        public Transition(IState state, Func<bool> condition)
+        public Transition(IState<TContext> state, Func<bool> condition, bool global = false) 
         {
             State = state;
             Condition = condition;
+            Global = global;
         }
     }
 }
