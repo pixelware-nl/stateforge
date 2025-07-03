@@ -1,53 +1,74 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
+using Stateforge.Runtime.Interfaces;
+using UnityEngine;
 
-namespace Stateforge
+namespace Stateforge.Runtime
 {
-    public interface IStateFactory
+    public abstract class StateFactory<TContext> : MonoBehaviour, IStateFactory<TContext> where TContext : IContext
     {
-        public void Initialize();
-        public IState GetState(Type state);
-    }
-    
-    public abstract class StateFactory<TController> : IStateFactory where TController : IController
-    {
-        private readonly TController _controller;
-        private readonly Dictionary<Type, State<TController>> _states = new();
+        private IStateMachine<TContext> _stateMachine;
+        private TContext _context;
+        
+        private readonly Dictionary<Type, IState<TContext>> _states = new();
+        public List<Type> RootStates { get; private set; } = new();
+        public Dictionary<Type, List<Type>> Map { get; private set; } = new();
 
-        protected StateFactory(TController controller)
+        public void Create(IStateMachine<TContext> stateMachine, TContext context)
         {
-            _controller = controller;
-        }
+            _stateMachine = stateMachine;
+            _context = context;
 
-        public void Initialize()
-        {
             SetStates();
 
-            foreach (State<TController> state in _states.Values)
+            foreach (IState<TContext> state in _states.Values)
             {
                 state.Setup();
             }
         }
         
-        public IState GetState(Type state)
+        public IState<TContext> GetState(Type state)
         {
             return _states[state];
         }
 
-        protected void AddRootState<TState>() where TState : State<TController>, new()
+        public IReadOnlyDictionary<Type, IState<TContext>> GetStates()
         {
+            return _states.ToDictionary(kvp => kvp.Key, (kvp) => kvp.Value);
+        }
+        
+        public IState<TContext> GetFirstRootState()
+        {
+            return _states.Values.FirstOrDefault(state => state.IsRootState);
+        }
+
+        protected void AddRootState<TState>() where TState : IState<TContext>, new()
+        {
+            if (!RootStates.Contains(typeof(TState)))
+            {
+                RootStates.Add(typeof(TState));
+            }
+            
             AddState<TState>(true);
         }
 
-        protected void AddChildState<TState>() where TState : State<TController>, new()
+        protected void AddChildState<TParent, TChild>() where TParent : IState<TContext> where TChild : IState<TContext>, new()
         {
-            AddState<TState>(false);
+            if (!Map.ContainsKey(typeof(TParent)))
+            {
+                Map[typeof(TParent)] = new List<Type>();
+            }
+            
+            Map[typeof(TParent)].Add(typeof(TChild));
+            
+            AddState<TChild>(false);
         }
-
-        private void AddState<TState>(bool isRoot) where TState : State<TController>, new()
+        
+        private void AddState<TState>(bool isRoot) where TState : IState<TContext>, new()
         {
             var instance = Activator.CreateInstance<TState>();
-            instance.Create(_controller, isRoot);
+            instance.Create(_stateMachine, _context, isRoot);
             
             _states.TryAdd(typeof(TState), instance);
         }

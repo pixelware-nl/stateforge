@@ -1,45 +1,63 @@
-﻿#nullable enable
+﻿using System;
+using System.Linq;
+using Stateforge.Runtime.Interfaces;
+using UnityEngine;
 
-namespace Stateforge
+namespace Stateforge.Runtime
 {
-    public interface IStateMachine
+    public abstract class StateMachine<TContext> : MonoBehaviour, IStateMachine<TContext> where TContext : IContext
     {
-        public IState CurrentState { get; set; }
-        public IStateTransition StateTransition { get; }
+        public IState<TContext> CurrentState { get; set; }
+        public IState<TContext> PreviousState { get; set; }
+        public IStateFactory<TContext> StateFactory { get; private set; }
         
-        public void Handle();
-        public string DrawGizmos(IState state);
-    }
-
-    public class StateMachine<TState> : IStateMachine where TState : IState
-    {
-        public IState CurrentState { get; set; }
-        public IStateTransition StateTransition { get; }
-
-        public StateMachine(IStateFactory stateFactory)
+        private IStateTransition<TContext> _stateTransition;
+        
+        private void Awake()
         {
-            CurrentState = stateFactory.GetState(typeof(TState));
-            CurrentState.Enter();
+            OnInit();
             
-            StateTransition = new StateTransition(stateFactory, this);
-        }
+            TContext context = GetComponent<TContext>();
+            if (context == null)
+            {
+                Debug.LogError($"Context of type {typeof(TContext).Name} is missing on {gameObject.name}. Please ensure it is attached.");
+                return;
+            }
+            
+            StateFactory = GetComponent<IStateFactory<TContext>>();
+            if (StateFactory == null)
+            {
+                Debug.LogError($"StateFactory of with the context {typeof(TContext).Name} is missing on {gameObject.name}. Please ensure it is attached.");
+                return;
+            }
+            
+            StateFactory.Create(this, context);
 
-        public void Handle()
+            SetGlobalTransitions();
+            
+            CurrentState = StateFactory.GetState(StateFactory.GetFirstRootState().GetType());
+            CurrentState.Enter();
+
+            _stateTransition = new StateTransition<TContext>(this);
+        }
+        
+        private void Update()
         {
-            StateTransition.Handle(CurrentState);
+            _stateTransition.Handle(CurrentState);
             CurrentState.Update();
         }
-        
-        public string DrawGizmos(IState state)
+
+        protected abstract void OnInit();
+        protected virtual void SetGlobalTransitions() { }
+
+        protected void AddGlobalTransition<TState>(Func<bool> condition) where TState : IState<TContext>
         {
-            string tree = state.GetType().Name;
+            var applicableStates = StateFactory.GetStates().Where(state => state.Key != typeof(TState));
 
-            if (state.ChildState != null)
+            foreach (IState<TContext> state in applicableStates.Select(state => state.Value))
             {
-                tree += " > " + DrawGizmos(state.ChildState);
+                state.Transitions.Add(new Transition<TContext>(StateFactory.GetState(typeof(TState)), condition, global: true));
             }
-
-            return tree;
         }
     }
 }

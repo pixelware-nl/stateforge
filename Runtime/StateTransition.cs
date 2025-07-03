@@ -2,29 +2,27 @@
 
 using System.Collections.Generic;
 using System.Linq;
+using Stateforge.Runtime.Interfaces;
 
-namespace Stateforge
+namespace Stateforge.Runtime
 {
-    public interface IStateTransition
+    public interface IStateTransition<TContext> where TContext : IContext
     {
-        public IStateFactory StateFactory { get; }
-        public IStateMachine StateMachine { get; }
+        public IStateMachine<TContext> StateMachine { get; }
         
-        public void Handle(IState state);
+        public void Handle(IState<TContext> state);
     }
     
-    public class StateTransition : IStateTransition
+    public class StateTransition<TContext> : IStateTransition<TContext> where TContext : IContext
     {
-        public IStateFactory StateFactory { get; }
-        public IStateMachine StateMachine { get; }
+        public IStateMachine<TContext> StateMachine { get; }
 
-        public StateTransition(IStateFactory stateFactory, IStateMachine stateMachine)
+        public StateTransition(IStateMachine<TContext> stateMachine)
         {
-            StateFactory = stateFactory;
             StateMachine = stateMachine;
         }
         
-        public void Handle(IState state)
+        public void Handle(IState<TContext> state)
         {
             Transition(state.Transitions, state);
 
@@ -34,9 +32,9 @@ namespace Stateforge
             }
         }
 
-        private void Transition(HashSet<ITransition> transitions, IState? state)
+        private void Transition(HashSet<ITransition<TContext>> transitions, IState<TContext>? state)
         {
-            ITransition? transition = GetTransition(transitions);
+            ITransition<TContext>? transition = GetTransition(transitions);
 
             if (transition == null)
             {
@@ -46,7 +44,7 @@ namespace Stateforge
             SetState(transition.State, state);
         }
 
-        private void SetState(IState to, IState? current)
+        private void SetState(IState<TContext> to, IState<TContext>? current)
         {
             if (TrySetRootState(to, current))
             {
@@ -61,7 +59,7 @@ namespace Stateforge
             }
         }
 
-        private bool TrySetRootState(IState to, IState? current)
+        private bool TrySetRootState(IState<TContext> to, IState<TContext>? current)
         {
             if (current is { IsRootState: true })
             {
@@ -71,7 +69,7 @@ namespace Stateforge
                 }
                 
                 StateMachine.CurrentState.Exit();
-                StateMachine.CurrentState = StateFactory.GetState(to.GetType());
+                StateMachine.CurrentState = StateMachine.StateFactory.GetState(to.GetType());
                 StateMachine.CurrentState.Enter();
                 
                 return true;
@@ -80,7 +78,7 @@ namespace Stateforge
             return false;
         }
 
-        private bool TrySetChildState(IState to, IState? current)
+        private bool TrySetChildState(IState<TContext> to, IState<TContext>? current)
         {
             if (current?.ParentState != null)
             {
@@ -90,7 +88,7 @@ namespace Stateforge
                 }
             
                 current.ParentState.ChildState?.Exit();
-                current.ParentState.ChildState = StateFactory.GetState(to.GetType());
+                current.ParentState.ChildState = StateMachine.StateFactory.GetState(to.GetType());
                 current.ParentState.ChildState.ParentState = current.ParentState;
                 current.ParentState.ChildState.Enter();
 
@@ -100,21 +98,29 @@ namespace Stateforge
             return false;
         }
         
-        private ITransition? GetTransition(HashSet<ITransition> transitions)
+        private ITransition<TContext>? GetTransition(HashSet<ITransition<TContext>> transitions)
         {
             if (transitions.Count == 0) 
             {
                 return null;
             }
-
-            foreach (ITransition transition in transitions.Where(transition => transition != null))
+            
+            foreach (ITransition<TContext> transition in transitions.Where(transition => transition is { Global: true }))
             {
                 if (transition.Condition())
                 {
                     return transition;
                 }
             }
-
+            
+            foreach (ITransition<TContext> transition in transitions.Where(transition => transition is { Global: false }))
+            {
+                if (transition.Condition())
+                {
+                    return transition;
+                }
+            }
+            
             return null;
         }
     }
