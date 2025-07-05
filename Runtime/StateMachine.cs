@@ -47,6 +47,16 @@ namespace Stateforge.Runtime
             CurrentState.Update();
         }
 
+        private void FixedUpdate()
+        {
+            CurrentState.FixedUpdate();
+        }
+
+        private void LateUpdate()
+        {
+            CurrentState.LateUpdate();
+        }
+
         protected abstract void OnInit();
         protected virtual void SetGlobalTransitions() { }
 
