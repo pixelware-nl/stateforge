@@ -46,9 +46,23 @@ namespace Stateforge.Runtime
             ChildState?.Update();
         }
 
+        public void FixedUpdate()
+        {
+            OnFixedUpdate();
+            ChildState?.FixedUpdate();
+        }
+
+        public void LateUpdate()
+        {
+            OnLateUpdate();
+            ChildState?.LateUpdate();
+        }
+
         protected virtual void OnEnter() { }
         protected virtual void OnExit() { }
         protected virtual void OnUpdate() { }
+        protected virtual void OnFixedUpdate() { }
+        protected virtual void OnLateUpdate() { }
         
         protected abstract void SetTransitions();
         
