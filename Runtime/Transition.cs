@@ -7,13 +7,11 @@ namespace Stateforge.Runtime
     {
         public IState<TContext> State { get; }
         public Func<bool> Condition { get; }
-        public bool Global { get; }
         
-        public Transition(IState<TContext> state, Func<bool> condition, bool global = false) 
+        public Transition(IState<TContext> state, Func<bool> condition) 
         {
             State = state;
             Condition = condition;
-            Global = global;
         }
     }
 }

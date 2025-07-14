@@ -10,6 +10,8 @@ namespace Stateforge.Runtime
         public IState<TContext> CurrentState { get; set; }
         public IState<TContext> PreviousState { get; set; }
         public IStateFactory<TContext> StateFactory { get; private set; }
+        public HashSet<ITransition<TContext>> Transitions { get; private set; }
+
         
         private IStateTransition<TContext> _stateTransition;
         
@@ -62,12 +64,7 @@ namespace Stateforge.Runtime
 
         protected void AddGlobalTransition<TState>(Func<bool> condition) where TState : IState<TContext>
         {
-            var applicableStates = StateFactory.GetStates().Where(state => state.Key != typeof(TState));
-
-            foreach (IState<TContext> state in applicableStates.Select(state => state.Value))
-            {
-                state.Transitions.Add(new Transition<TContext>(StateFactory.GetState(typeof(TState)), condition, global: true));
-            }
+            Transitions.Add(new Transition<TContext>(StateFactory.GetState(typeof(TState)), condition));
         }
     }
 }

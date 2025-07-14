@@ -86,7 +86,7 @@ namespace Stateforge.Runtime
                 {
                     return true;
                 }
-            
+                
                 current.ParentState.ChildState?.Exit();
                 current.ParentState.ChildState = StateMachine.StateFactory.GetState(to.GetType());
                 current.ParentState.ChildState.ParentState = current.ParentState;
@@ -104,8 +104,8 @@ namespace Stateforge.Runtime
             {
                 return null;
             }
-            
-            foreach (ITransition<TContext> transition in transitions.Where(transition => transition is { Global: true }))
+
+            foreach (ITransition<TContext> transition in StateMachine.transitions)
             {
                 if (transition.Condition())
                 {
@@ -113,7 +113,7 @@ namespace Stateforge.Runtime
                 }
             }
             
-            foreach (ITransition<TContext> transition in transitions.Where(transition => transition is { Global: false }))
+            foreach (ITransition<TContext> transition in transitions)
             {
                 if (transition.Condition())
                 {

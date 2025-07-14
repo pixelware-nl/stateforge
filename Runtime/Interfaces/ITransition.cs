@@ -6,7 +6,6 @@ namespace Stateforge.Runtime.Interfaces
     {
         IState<TContext> State { get; }
         Func<bool> Condition { get; }
-        bool Global { get; }
     }    
 }
 
