@@ -43,6 +43,11 @@ namespace Stateforge.Runtime
             return _states.Values.FirstOrDefault(state => state.IsRootState);
         }
 
+        /// <summary>
+        /// Add a root state to the state machine. Root states do not have a parent state.
+        /// </summary>
+        /// <typeparam name="TState">The state of type IState</typeparam>
+        /// <returns></returns>
         protected void AddRootState<TState>() where TState : IState<TContext>, new()
         {
             if (!RootStates.Contains(typeof(TState)))
@@ -53,6 +58,11 @@ namespace Stateforge.Runtime
             AddState<TState>(true);
         }
 
+        /// <summary>
+        /// Add a child state to a parent state. The parent state must be added first as a root state or as a child state.
+        /// </summary>
+        /// <typeparam name="TParent">The parent state of type IState</typeparam>
+        /// <typeparam name="TChild">The child state of type IState</typeparam>
         protected void AddChildState<TParent, TChild>() where TParent : IState<TContext> where TChild : IState<TContext>, new()
         {
             if (!Map.ContainsKey(typeof(TParent)))
@@ -73,6 +83,9 @@ namespace Stateforge.Runtime
             _states.TryAdd(typeof(TState), instance);
         }
 
+        /// <summary>
+        /// Set the states and their hierarchy here by calling AddRootState and AddChildState.
+        /// </summary>
         protected abstract void SetStates();
     }
 }

@@ -57,9 +57,21 @@ namespace Stateforge.Runtime
             CurrentState.LateUpdate();
         }
 
+        /// <summary>
+        /// This method is called during Awake to allow derived classes to perform any necessary initialization before the state machine starts.
+        /// </summary>
         protected abstract void OnInit();
+        
+        /// <summary>
+        /// This method is called during Awake to that allows states to switch to global states from any other state.
+        /// </summary>
         protected virtual void SetGlobalTransitions() { }
 
+        /// <summary>
+        /// This function adds a global transition to the specified state. A global transition allows the state machine to transition to the specified state from any other state when the given condition is met.
+        /// </summary>
+        /// <param name="condition">A boolean function returning true or false.</param>
+        /// <typeparam name="TState">The state of type IState</typeparam>
         protected void AddGlobalTransition<TState>(Func<bool> condition) where TState : IState<TContext>
         {
             var applicableStates = StateFactory.GetStates().Where(state => state.Key != typeof(TState));
