@@ -69,18 +69,21 @@ namespace Stateforge.Runtime
 
         /// <summary>
         /// Internal method to handle state entry with kinematic character controller lifecycle.
-        /// Override OnEnter() in derived classes instead.
+        /// Override OnKinematicEnter() in derived classes instead.
         /// </summary>
         protected sealed override void OnEnter()
         {
+            // Note: These values are initialized to defaults and should be set by the derived class.
+            // In a real implementation, you would typically retrieve current values from your
+            // character motor or context before passing them to these methods.
             Vector3 velocity = Vector3.zero;
             Quaternion rotation = Quaternion.identity;
             float deltaTime = Time.deltaTime;
 
-            // Call velocity initialization first
+            // Call velocity initialization first (step 1)
             OnStartVelocity(ref velocity, deltaTime);
             
-            // Call rotation initialization second
+            // Call rotation initialization second (step 2)
             OnStartRotation(ref rotation, deltaTime);
 
             // Call the derived class OnEnter
@@ -89,7 +92,7 @@ namespace Stateforge.Runtime
 
         /// <summary>
         /// Internal method to handle state update with kinematic character controller lifecycle.
-        /// Override OnUpdate() in derived classes instead.
+        /// Override OnKinematicUpdate() in derived classes instead.
         /// </summary>
         protected sealed override void OnUpdate()
         {
@@ -101,6 +104,9 @@ namespace Stateforge.Runtime
             // Update CollisionInfo (step 4)
             UpdateCollisionInfo(deltaTime);
 
+            // Note: These values are initialized to defaults and should be set by the derived class.
+            // In a real implementation, you would typically retrieve current values from your
+            // character motor or context before passing them to these methods.
             Vector3 velocity = Vector3.zero;
             Quaternion rotation = Quaternion.identity;
 
@@ -116,10 +122,13 @@ namespace Stateforge.Runtime
 
         /// <summary>
         /// Internal method to handle state exit with kinematic character controller lifecycle.
-        /// Override OnExit() in derived classes instead.
+        /// Override OnKinematicExit() in derived classes instead.
         /// </summary>
         protected sealed override void OnExit()
         {
+            // Note: These values are initialized to defaults and should be set by the derived class.
+            // In a real implementation, you would typically retrieve current values from your
+            // character motor or context before passing them to these methods.
             Vector3 velocity = Vector3.zero;
             Quaternion rotation = Quaternion.identity;
             float deltaTime = Time.deltaTime;
